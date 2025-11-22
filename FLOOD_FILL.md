@@ -29,6 +29,142 @@ Each component represents a separate character or digit.
 
 ---
 
+## Understanding Components: A Simple Explanation
+
+Think of the binary image as a **grid of squares**. Some squares are **painted black** (1) and some are **white** (0).
+
+### The Grid with Coordinates
+
+```
+     Column: 0  1  2  3  4
+Row 0:       0  1  1  0  0
+Row 1:       0  1  0  0  1
+Row 2:       0  0  0  1  1
+Row 3:       1  1  0  1  0
+Row 4:       1  0  0  0  0
+```
+
+**Black squares (1) are at these positions:**
+- (1,0) and (2,0) — top row, columns 1 and 2
+- (1,1) — second row, column 1
+- (4,1) — second row, column 4
+- (3,2) and (4,2) — third row, columns 3 and 4
+- (0,3), (1,3), (3,3) — fourth row, columns 0, 1, and 3
+- (0,4) — bottom row, column 0
+
+### What is a "Component"?
+
+A **component** is a group of black squares that **touch each other** (either left-right or up-down, but NOT diagonal).
+
+Think of it like **islands in water** — each island is made of connected pieces of land.
+
+### Visual Breakdown
+
+Let me show you which black squares are connected:
+
+```
+     0  1  2  3  4
+0:   .  A  A  .  .     ← Component 1 (A): top cluster
+1:   .  A  .  .  B     ← A continues down, B starts
+2:   .  .  .  B  B     ← B continues
+3:   C  C  .  B  .     ← Component 2 (B) continues, Component 3 (C) starts
+4:   C  .  .  .  .     ← C continues down
+```
+
+**Component 1 (labeled 'A')** — Pixels: (1,0), (2,0), (1,1)
+
+These three black squares touch each other:
+```
+. A A . .    ← (1,0) and (2,0) touch left-right
+. A . . .    ← (1,1) touches (1,0) above it
+```
+
+**Component 2 (labeled 'B')** — Pixels: (4,1), (3,2), (4,2), (3,3)
+
+These four black squares form a chain:
+```
+. . . . B    ← (4,1) starts here
+. . . B B    ← (3,2) and (4,2) touch each other left-right
+            ← (4,2) also touches (4,1) above it
+. . . B .    ← (3,3) touches (3,2) above it
+```
+
+**Component 3 (labeled 'C')** — Pixels: (0,3), (1,3), (0,4)
+
+These three black squares form an L-shape:
+```
+C C . . .    ← (0,3) and (1,3) touch left-right
+C . . . .    ← (0,4) touches (0,3) above it
+```
+
+### Why Are They Separate Components?
+
+Look at the gaps between the groups:
+
+```
+     0  1  2  3  4
+0:   .  A  A  .  .
+1:   .  A  .  .  B  ← A and B don't touch (gap at columns 2,3)
+2:   .  .  .  B  B  ← A and B separated by row 2
+3:   C  C  .  B  .  ← C and B don't touch (gap at column 2)
+4:   C  .  .  .  .
+```
+
+- **A and B** are separated (column 2 is empty between them)
+- **A and C** are separated (row 2 is empty between them)  
+- **B and C** are separated (column 2 is empty between them)
+
+### Real-World Analogy: Islands on a Map
+
+Imagine you're looking at a map from above:
+
+```
+     0  1  2  3  4
+0:   🌊 🏝️ 🏝️ 🌊 🌊    ← Island A (2 pieces of land touching)
+1:   🌊 🏝️ 🌊 🌊 🏝️    ← Island A continues down; Island B starts
+2:   🌊 🌊 🌊 🏝️ 🏝️    ← Island B grows
+3:   🏝️ 🏝️ 🌊 🏝️ 🌊    ← Island C appears; Island B continues
+4:   🏝️ 🌊 🌊 🌊 🌊    ← Island C continues
+```
+
+- **Island A** (top-left): 3 connected pieces
+- **Island B** (right side): 4 connected pieces  
+- **Island C** (bottom-left): 3 connected pieces
+
+Each island is a **component** — the land pieces touch each other, but the islands are separated by water.
+
+### How the Algorithm Finds Components
+
+**Step 1:** Scan from top-left to bottom-right
+
+**Step 2:** When you find a black square (1) that hasn't been visited:
+- Mark it as part of a new component
+- Check all 4 neighbors (up, down, left, right)
+- If a neighbor is also black, add it to the same component
+- Keep checking neighbors of neighbors until no more connected black squares
+
+**Step 3:** Start scanning again to find the next unvisited black square
+
+### Coordinate System Reminder
+
+**(column, row)** or **(x, y)**
+
+```
+     x →
+   0  1  2  3  4
+y 0: .  .  .  .  .
+↓ 1: .  .  .  .  .
+  2: .  .  .  .  .
+```
+
+So **(1,0)** means:
+- **Column 1** (second column from left)
+- **Row 0** (first row from top)
+
+**Key takeaway:** Components are groups of black pixels that touch each other, like connected pieces of a puzzle or islands in water!
+
+---
+
 ## What is DFS (Depth-First Search)?
 
 **DFS** is a graph traversal algorithm that explores as far as possible along each branch before backtracking.
