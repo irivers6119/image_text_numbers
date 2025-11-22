@@ -79,7 +79,7 @@ def binarize(img, threshold=128):
 
 **Why threshold=128?** Middle of 0-255 range works well for black text on white background.
 
-**Interview tip:** Discuss adaptive thresholding (Otsu's method) as an improvement for varying lighting.
+**Interview tip:** Discuss adaptive thresholding ([Otsu's method](OTSU_METHOD.md)) as an improvement for varying lighting conditions.
 
 ---
 
@@ -88,6 +88,8 @@ def binarize(img, threshold=128):
 **Problem:** Identify each separate character in the image.
 
 **Solution:** Flood-fill algorithm (iterative DFS with a stack)
+
+For a detailed explanation of the flood-fill algorithm, DFS, and why we use iterative instead of recursive implementation, see **[FLOOD_FILL.md](FLOOD_FILL.md)**.
 
 ```python
 def find_components(binary_img):
@@ -195,7 +197,7 @@ def classify_digit(component):
 - **Holes:** Count enclosed white regions using flood-fill
 - **Row patterns:** Which sides are filled at key heights
 
-**Interview tip:** Explain this as a "decision tree" and discuss how ML (CNN) would learn these features automatically.
+**Interview tip:** Explain this as a **"decision tree"** and discuss how ML (CNN) would learn these features automatically. See **[DECISION_TREES_VS_ML.md](DECISION_TREES_VS_ML.md)** for a detailed comparison of rule-based vs machine learning approaches.
 
 ---
 
@@ -231,7 +233,7 @@ if digits_only:
                 continue  # Reject as letter 'o'
 ```
 
-**Interview tip:** This demonstrates **context modeling** — using surrounding information to resolve ambiguity, similar to how NLP models use context for word disambiguation.
+**Interview tip:** This demonstrates **context modeling** — using surrounding information to resolve ambiguity, similar to how NLP models use context for word disambiguation. For an in-depth explanation of context modeling, including comparisons to modern attention mechanisms and applications across different domains, see **[CONTEXT_MODELING.md](CONTEXT_MODELING.md)**.
 
 ---
 
