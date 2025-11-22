@@ -62,7 +62,7 @@ def load_ppm(filename):
     # 5. Return 2D array of grayscale values
 ```
 
-**Interview tip:** Mention you could extend this to handle P6 (binary) PPM for better performance.
+**Interview tip:** Mention you could extend this to handle P6 (binary) PPM for better performance. For a detailed explanation of P3 vs P6 formats, including performance comparisons, implementation differences, and when to use each format, see **[PPM_FORMATS.md](PPM_FORMATS.md)**.
 
 ---
 
@@ -251,7 +251,7 @@ if digit1 == digit2 and gap <= 2 and width1 <= 3 and width2 <= 3:
     i += 2  # Skip both components
 ```
 
-**Interview tip:** Explain this handles "serifs" and imperfect image quality where digits may have small gaps.
+**Interview tip:** Explain this handles "serifs" and imperfect image quality where digits may have small gaps. For a comprehensive explanation of serif handling strategies, including aggressive merging, shape-aware validation, and trade-offs between different approaches, see **[HANDLING_SERIFS.md](HANDLING_SERIFS.md)**.
 
 ---
 
