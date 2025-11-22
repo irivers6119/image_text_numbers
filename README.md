@@ -142,11 +142,85 @@ digit_patterns = {
 }
 ```
 
+### Understanding Template Matching (Simple Explanation)
+
+**What is a template?** Think of it like a **stencil** or **cookie cutter**. Each digit has a specific shape, and we store that exact shape as a pattern.
+
+**How the pattern works:**
+
+Each pattern is a small drawing of what the digit looks like, where:
+- `1` = black pixel (the digit itself)
+- `.` = white pixel (empty space)
+- `\n` = new line (move down to next row)
+
+**Example: The digit '0'**
+
+The pattern `'111\n1.1\n1.1\n1.1\n111'` represents:
+
+```
+Visual representation:
+Row 1:  1 1 1  ← Top of the zero (3 black pixels)
+Row 2:  1 . 1  ← Left and right sides (black), middle empty (white)
+Row 3:  1 . 1  ← Left and right sides (black), middle empty (white)
+Row 4:  1 . 1  ← Left and right sides (black), middle empty (white)
+Row 5:  1 1 1  ← Bottom of the zero (3 black pixels)
+```
+
+This looks like a **box** or **rectangle** — which is exactly what '0' looks like!
+
+**Example: The digit '1'**
+
+The pattern `'.1.\n.1.\n.1.\n.1.\n111'` represents:
+
+```
+Visual representation:
+Row 1:  . 1 .  ← One black pixel in the middle
+Row 2:  . 1 .  ← One black pixel in the middle
+Row 3:  . 1 .  ← One black pixel in the middle
+Row 4:  . 1 .  ← One black pixel in the middle
+Row 5:  1 1 1  ← Three black pixels at the bottom (the base)
+```
+
+This looks like a **vertical line with a base** — the shape of '1'!
+
+**Example: The digit '2'**
+
+The pattern `'111\n..1\n111\n1..\n111'` represents:
+
+```
+Visual representation:
+Row 1:  1 1 1  ← Top horizontal line
+Row 2:  . . 1  ← Only right side (going down)
+Row 3:  1 1 1  ← Middle horizontal line
+Row 4:  1 . .  ← Only left side (going down)
+Row 5:  1 1 1  ← Bottom horizontal line
+```
+
+This creates an **S-curve** — exactly what '2' looks like!
+
 **How it works:**
 1. Extract bounding box of component
 2. Build mini-grid (relative coordinates)
 3. Convert to string pattern (`'1'` = black, `'.'` = white)
 4. Look up pattern in dictionary
+
+**Real example from code:**
+
+When the algorithm finds a component in the image:
+1. It creates a 3×5 grid of that component
+2. Converts it to a pattern string like `'111\n1.1\n1.1\n1.1\n111'`
+3. Looks in the dictionary: "Does this pattern match any stored pattern?"
+4. If it matches `'111\n1.1\n1.1\n1.1\n111'`, returns `'0'`!
+
+**Why this works:**
+- **Fast:** Just compare strings (like matching passwords)
+- **Exact:** If the font is the same, patterns always match
+- **Simple:** No complex math needed
+
+**When it fails:**
+- Different font sizes (4×6 instead of 3×5)
+- Slightly different shapes (rounded '0' vs square '0')
+- Rotated or skewed digits
 
 **Interview tip:** Discuss trade-offs:
 - **Pros:** Simple, fast lookup O(1), works great for fixed fonts
@@ -190,6 +264,242 @@ def classify_digit(component):
             return '5'
         # ... etc
 ```
+
+### Understanding Geometric Heuristics (Simple Explanation)
+
+**What are heuristics?** Think of them as **educated guesses** or **rules of thumb**. When we can't match the exact pattern, we look at the digit's **shape characteristics** to make a smart guess about what it is.
+
+Imagine you're looking at a blurry digit and trying to figure out what it is. You might think:
+- "It's really **tall and skinny** → probably a '1'"
+- "It has a **hole in the middle** → probably a '0', '6', '8', or '9'"
+- "It's **mostly filled with black pixels** → probably an '8'"
+
+That's exactly what geometric heuristics do!
+
+---
+
+### Feature 1: Aspect Ratio (Shape)
+
+**What is aspect ratio?** It's the relationship between width and height.
+
+```
+aspect_ratio = width ÷ height
+```
+
+**Example: Digit '1'**
+```
+Width: 2 pixels
+Height: 5 pixels
+
+□ ■ □
+□ ■ □
+□ ■ □
+□ ■ □
+■ ■ ■
+
+Aspect ratio = 2 ÷ 5 = 0.4
+```
+
+This is **very narrow** (less than 0.5), so it's probably a '1'!
+
+**Example: Digit '8'**
+```
+Width: 3 pixels
+Height: 5 pixels
+
+■ ■ ■
+■ □ ■
+■ ■ ■
+■ □ ■
+■ ■ ■
+
+Aspect ratio = 3 ÷ 5 = 0.6
+```
+
+This is **wider** (greater than 0.5), so it's NOT a '1'. We need to check other features.
+
+**Rule:** If `aspect_ratio < 0.5` OR `width ≤ 2` → It's a '1'
+
+---
+
+### Feature 2: Holes (Enclosed Empty Spaces)
+
+**What is a hole?** A white (empty) area completely surrounded by black pixels.
+
+**Example: Digit '0'**
+```
+■ ■ ■
+■ □ ■  ← This white pixel is surrounded by black
+■ □ ■  ← It forms a "hole"
+■ □ ■
+■ ■ ■
+
+Number of holes: 1
+```
+
+**Example: Digit '8'**
+```
+■ ■ ■
+■ □ ■  ← First hole (top)
+■ ■ ■
+■ □ ■  ← Second hole (bottom)
+■ ■ ■
+
+Number of holes: 2
+```
+
+**Example: Digit '2'**
+```
+■ ■ ■
+□ □ ■  ← These white pixels connect to the edge
+■ ■ ■  ← Not enclosed = NOT a hole
+■ □ □
+■ ■ ■
+
+Number of holes: 0
+```
+
+**Rules:**
+- **1 hole** → Probably '0', '6', '9', or '4'
+- **2 holes** → Probably '8'
+- **0 holes** → Could be '1', '2', '3', '5', '7'
+
+---
+
+### Feature 3: Row Pattern Analysis (Which Sides Are Filled?)
+
+For 3×5 grids, we check **specific rows** to see which sides have black pixels.
+
+**Key rows to check:**
+- **Row 1** (second row from top)
+- **Row 3** (fourth row from top)
+
+**Example: Digit '5'**
+```
+Row 0:  ■ ■ ■     [Top]
+Row 1:  ■ □ □  ← Left side filled, right side empty
+Row 2:  ■ ■ ■     [Middle]
+Row 3:  □ □ ■  ← Left side empty, right side filled
+Row 4:  ■ ■ ■     [Bottom]
+```
+
+**Pattern for '5':**
+- Row 1: Left=YES, Right=NO
+- Row 3: Left=NO, Right=YES
+
+This creates a **reversed S-shape**!
+
+**Example: Digit '9'**
+```
+Row 0:  ■ ■ ■     [Top]
+Row 1:  ■ □ ■  ← Both sides filled
+Row 2:  ■ ■ ■     [Middle]
+Row 3:  □ □ ■  ← Only right side filled
+Row 4:  ■ ■ ■     [Bottom]
+```
+
+**Pattern for '9':**
+- Row 1: Left=YES, Right=YES
+- Row 3: Left=NO, Right=YES
+
+This creates a **top-heavy shape**!
+
+**Example: Digit '6'**
+```
+Row 0:  ■ ■ ■     [Top]
+Row 1:  ■ □ □  ← Only left side filled
+Row 2:  ■ ■ ■     [Middle]
+Row 3:  ■ □ ■  ← Both sides filled
+Row 4:  ■ ■ ■     [Bottom]
+```
+
+**Pattern for '6':**
+- Row 1: Left=YES, Right=NO
+- Row 3: Left=YES, Right=YES
+
+This creates a **bottom-heavy shape**!
+
+---
+
+### Feature 4: Density (How Full Is It?)
+
+**What is density?** The percentage of black pixels in the digit's area.
+
+```
+density = (number of black pixels) ÷ (width × height)
+```
+
+**Example: Digit '8'**
+```
+■ ■ ■
+■ □ ■
+■ ■ ■
+■ □ ■
+■ ■ ■
+
+Black pixels: 13
+Area: 3 × 5 = 15
+Density: 13 ÷ 15 = 0.87 (87% filled)
+```
+
+This is **very dense** (lots of black)!
+
+**Example: Digit '7'**
+```
+■ ■ ■
+□ □ ■
+□ □ ■
+□ □ ■
+□ □ ■
+
+Black pixels: 7
+Area: 3 × 5 = 15
+Density: 7 ÷ 15 = 0.47 (47% filled)
+```
+
+This is **less dense** (more white space)!
+
+**Rules:**
+- **High density** (>0.75) → Probably '8' or '0'
+- **Low density** (<0.50) → Probably '1', '7', or '4'
+
+---
+
+### Why Use Heuristics Instead of Templates?
+
+**Templates need EXACT matches:**
+- If the digit is slightly bigger/smaller → No match ❌
+- If one pixel is different → No match ❌
+- If the font changes → No match ❌
+
+**Heuristics are FLEXIBLE:**
+- Slightly bigger/smaller → Still works ✓
+- Few pixels different → Still works ✓
+- Can handle variations → Still works ✓
+
+**Trade-off:**
+- Templates: **100% accurate** when font matches, **0% accurate** when font changes
+- Heuristics: **70-90% accurate** always, works with variations
+
+---
+
+### Real-World Analogy
+
+Imagine identifying animals:
+
+**Template matching:**
+- "Does it look EXACTLY like this picture of a cat?" 
+- If yes → Cat. If no → Unknown.
+
+**Geometric heuristics:**
+- "Does it have 4 legs, fur, whiskers, and pointy ears?"
+- "Does it meow?"
+- "Is it about this big?"
+- Combine all clues → Probably a cat!
+
+The second approach works even if you've never seen that exact cat before!
+
+---
 
 **Key geometric features:**
 - **Aspect ratio:** Distinguishes narrow '1' from square digits
